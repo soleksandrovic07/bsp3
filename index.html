@@ -1,0 +1,658 @@
+<html lang="ru" ml-update="aware" class="no-touch"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Прогноз продаж — Июнь 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #f0ede8;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.18);
+    --text: #1a1917;
+    --text2: #6b6965;
+    --text3: #9e9b96;
+    --blue: #378ADD;
+    --teal: #1D9E75;
+    --amber: #BA7517;
+    --red: #A32D2D;
+    --green: #3B6D11;
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #18181a;
+      --surface: #232325;
+      --surface2: #2c2c2e;
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.15);
+      --text: #f0ede8;
+      --text2: #9e9b96;
+      --text3: #6b6965;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .container { max-width: 960px; margin: 0 auto; }
+
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .title-block h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .title-block p {
+    font-size: 13px;
+    color: var(--text2);
+    margin-top: 3px;
+  }
+
+  .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  button {
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: var(--radius);
+    padding: 7px 14px;
+    transition: all 0.15s;
+    border: 1px solid var(--border2);
+    background: var(--surface);
+    color: var(--text);
+  }
+  button:hover { background: var(--surface2); }
+  button:active { transform: scale(0.97); }
+  button.primary {
+    background: var(--text);
+    color: var(--bg);
+    border-color: transparent;
+  }
+  button.primary:hover { opacity: 0.88; }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 2rem 0 0.75rem;
+  }
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.1rem;
+  }
+  .kpi .k-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+  .kpi .k-val { font-size: 21px; font-weight: 600; letter-spacing: -0.02em; }
+  .kpi .k-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .kpi.danger .k-val { color: var(--red); }
+  .kpi.success .k-val { color: var(--green); }
+
+  .mgr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .mgr-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.1rem 1.2rem;
+  }
+  .mgr-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .mgr-name { font-size: 15px; font-weight: 600; }
+  .mgr-pct {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 99px;
+    background: var(--surface2);
+    color: var(--text2);
+  }
+
+  .mgr-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text2);
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .mgr-row:last-of-type { border-bottom: none; }
+  .mgr-row .v { font-weight: 500; color: var(--text); }
+  .mgr-row .v.red { color: var(--red); }
+  .mgr-row .v.green { color: var(--green); }
+
+  .bar-wrap { margin-top: 10px; }
+  .bar-bg {
+    background: var(--surface2);
+    border-radius: 99px;
+    height: 5px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .bar-fill { height: 100%; border-radius: 99px; transition: width 0.5s ease; }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.2rem 1.4rem;
+    margin-top: 0;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 10px;
+  }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .ldot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  .editor-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: none;
+  }
+  .editor-panel.open { display: block; }
+
+  .editor-top {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .editor-top h3 { font-size: 14px; font-weight: 600; }
+
+  .editor-body { padding: 1.2rem; }
+
+  .editor-tabs { display: flex; gap: 4px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .etab {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+  }
+  .etab.active { background: var(--text); color: var(--bg); border-color: transparent; }
+
+  .mgr-editor { display: none; }
+  .mgr-editor.active { display: block; }
+
+  .plan-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+  .plan-row label { font-size: 12px; color: var(--text2); width: 100px; flex-shrink: 0; }
+  .plan-row input[type=number] {
+    flex: 1;
+    font-family: inherit;
+    font-size: 13px;
+    padding: 7px 10px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    background: var(--surface2);
+    color: var(--text);
+    width: 100%;
+  }
+  .plan-row input[type=number]:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+
+  table.day-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.day-table th {
+    text-align: left;
+    padding: 6px 8px;
+    color: var(--text3);
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+  }
+  table.day-table td { padding: 4px 4px; border-bottom: 1px solid var(--border); }
+  table.day-table tr:last-child td { border-bottom: none; }
+  table.day-table td.day-num { color: var(--text2); font-size: 11px; padding-left: 8px; width: 60px; }
+  table.day-table input[type=number] {
+    width: 100%;
+    font-family: inherit;
+    font-size: 12px;
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface2);
+    color: var(--text);
+  }
+  table.day-table input[type=number]:focus { outline: 2px solid var(--blue); }
+
+  @media (max-width: 600px) {
+    .kpi .k-val { font-size: 17px; }
+    header { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="title-block">
+      <h1>Прогноз продаж — Июнь 2026</h1>
+      <p id="updated-label">Данные за июня 2026 · обновлено 5 июня 2026 г.</p>
+    </div>
+    <div class="header-actions">
+      <button onclick="toggleEditor()">✏️ Редактировать данные</button>
+      <button class="primary" onclick="downloadHTML()">⬇ Скачать</button>
+    </div>
+  </header>
+
+  <div class="editor-panel" id="editorPanel">
+    <div class="editor-top">
+      <h3>Редактирование данных</h3>
+      <div style="display:flex;gap:8px;">
+        <button onclick="applyAndClose()" class="primary">✓ Применить</button>
+        <button onclick="toggleEditor()">Закрыть</button>
+      </div>
+    </div>
+    <div class="editor-body">
+      <div class="plan-row">
+        <label>Месяц (1–12)</label>
+        <input type="number" id="inp-month" value="6" min="1" max="12" step="1">
+      </div>
+      <div class="plan-row">
+        <label>Год</label>
+        <input type="number" id="inp-year" value="2026" min="2020" max="2099" step="1">
+      </div>
+      <div class="plan-row">
+        <label>Общий план ₴</label>
+        <input type="number" id="inp-total-plan" value="1725000" step="1000">
+      </div>
+      <div class="editor-tabs" id="mgrTabs"><button class="etab" onclick="switchMgrTab(0)">Неля</button><button class="etab" onclick="switchMgrTab(1)">Наталья</button><button class="etab active" onclick="switchMgrTab(2)">Наталья З</button></div>
+      <div id="mgrEditors">
+    <div class="mgr-editor" id="mgr-editor-0">
+      <div class="plan-row"><label>План ₴</label><input type="number" id="plan-0" value="312500" step="1000"></div>
+      <table class="day-table"><thead><tr><th>День июня</th><th>Оплата ₴</th></tr></thead><tbody>
+        <tr><td class="day-num">1 июня</td><td><input type="number" id="day-0-0" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">2 июня</td><td><input type="number" id="day-0-1" value="4710" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">3 июня</td><td><input type="number" id="day-0-2" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">4 июня</td><td><input type="number" id="day-0-3" value="26800" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">5 июня</td><td><input type="number" id="day-0-4" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">6 июня</td><td><input type="number" id="day-0-5" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">7 июня</td><td><input type="number" id="day-0-6" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">8 июня</td><td><input type="number" id="day-0-7" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">9 июня</td><td><input type="number" id="day-0-8" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">10 июня</td><td><input type="number" id="day-0-9" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">11 июня</td><td><input type="number" id="day-0-10" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">12 июня</td><td><input type="number" id="day-0-11" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">13 июня</td><td><input type="number" id="day-0-12" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">14 июня</td><td><input type="number" id="day-0-13" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">15 июня</td><td><input type="number" id="day-0-14" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">16 июня</td><td><input type="number" id="day-0-15" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">17 июня</td><td><input type="number" id="day-0-16" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">18 июня</td><td><input type="number" id="day-0-17" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">19 июня</td><td><input type="number" id="day-0-18" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">20 июня</td><td><input type="number" id="day-0-19" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">21 июня</td><td><input type="number" id="day-0-20" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">22 июня</td><td><input type="number" id="day-0-21" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">23 июня</td><td><input type="number" id="day-0-22" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">24 июня</td><td><input type="number" id="day-0-23" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">25 июня</td><td><input type="number" id="day-0-24" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">26 июня</td><td><input type="number" id="day-0-25" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">27 июня</td><td><input type="number" id="day-0-26" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">28 июня</td><td><input type="number" id="day-0-27" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">29 июня</td><td><input type="number" id="day-0-28" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">30 июня</td><td><input type="number" id="day-0-29" value="" min="0" step="100" placeholder="0"></td></tr>
+      </tbody></table>
+    </div>
+  
+    <div class="mgr-editor" id="mgr-editor-1">
+      <div class="plan-row"><label>План ₴</label><input type="number" id="plan-1" value="625000" step="1000"></div>
+      <table class="day-table"><thead><tr><th>День июня</th><th>Оплата ₴</th></tr></thead><tbody>
+        <tr><td class="day-num">1 июня</td><td><input type="number" id="day-1-0" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">2 июня</td><td><input type="number" id="day-1-1" value="879" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">3 июня</td><td><input type="number" id="day-1-2" value="2600" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">4 июня</td><td><input type="number" id="day-1-3" value="18000" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">5 июня</td><td><input type="number" id="day-1-4" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">6 июня</td><td><input type="number" id="day-1-5" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">7 июня</td><td><input type="number" id="day-1-6" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">8 июня</td><td><input type="number" id="day-1-7" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">9 июня</td><td><input type="number" id="day-1-8" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">10 июня</td><td><input type="number" id="day-1-9" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">11 июня</td><td><input type="number" id="day-1-10" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">12 июня</td><td><input type="number" id="day-1-11" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">13 июня</td><td><input type="number" id="day-1-12" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">14 июня</td><td><input type="number" id="day-1-13" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">15 июня</td><td><input type="number" id="day-1-14" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">16 июня</td><td><input type="number" id="day-1-15" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">17 июня</td><td><input type="number" id="day-1-16" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">18 июня</td><td><input type="number" id="day-1-17" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">19 июня</td><td><input type="number" id="day-1-18" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">20 июня</td><td><input type="number" id="day-1-19" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">21 июня</td><td><input type="number" id="day-1-20" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">22 июня</td><td><input type="number" id="day-1-21" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">23 июня</td><td><input type="number" id="day-1-22" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">24 июня</td><td><input type="number" id="day-1-23" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">25 июня</td><td><input type="number" id="day-1-24" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">26 июня</td><td><input type="number" id="day-1-25" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">27 июня</td><td><input type="number" id="day-1-26" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">28 июня</td><td><input type="number" id="day-1-27" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">29 июня</td><td><input type="number" id="day-1-28" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">30 июня</td><td><input type="number" id="day-1-29" value="" min="0" step="100" placeholder="0"></td></tr>
+      </tbody></table>
+    </div>
+  
+    <div class="mgr-editor active" id="mgr-editor-2">
+      <div class="plan-row"><label>План ₴</label><input type="number" id="plan-2" value="625000" step="1000"></div>
+      <table class="day-table"><thead><tr><th>День июня</th><th>Оплата ₴</th></tr></thead><tbody>
+        <tr><td class="day-num">1 июня</td><td><input type="number" id="day-2-0" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">2 июня</td><td><input type="number" id="day-2-1" value="48336.3" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">3 июня</td><td><input type="number" id="day-2-2" value="8309" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">4 июня</td><td><input type="number" id="day-2-3" value="23550" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">5 июня</td><td><input type="number" id="day-2-4" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">6 июня</td><td><input type="number" id="day-2-5" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">7 июня</td><td><input type="number" id="day-2-6" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">8 июня</td><td><input type="number" id="day-2-7" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">9 июня</td><td><input type="number" id="day-2-8" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">10 июня</td><td><input type="number" id="day-2-9" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">11 июня</td><td><input type="number" id="day-2-10" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">12 июня</td><td><input type="number" id="day-2-11" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">13 июня</td><td><input type="number" id="day-2-12" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">14 июня</td><td><input type="number" id="day-2-13" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">15 июня</td><td><input type="number" id="day-2-14" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">16 июня</td><td><input type="number" id="day-2-15" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">17 июня</td><td><input type="number" id="day-2-16" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">18 июня</td><td><input type="number" id="day-2-17" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">19 июня</td><td><input type="number" id="day-2-18" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">20 июня</td><td><input type="number" id="day-2-19" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">21 июня</td><td><input type="number" id="day-2-20" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">22 июня</td><td><input type="number" id="day-2-21" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">23 июня</td><td><input type="number" id="day-2-22" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">24 июня</td><td><input type="number" id="day-2-23" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">25 июня</td><td><input type="number" id="day-2-24" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">26 июня</td><td><input type="number" id="day-2-25" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">27 июня</td><td><input type="number" id="day-2-26" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">28 июня</td><td><input type="number" id="day-2-27" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">29 июня</td><td><input type="number" id="day-2-28" value="" min="0" step="100" placeholder="0"></td></tr><tr><td class="day-num">30 июня</td><td><input type="number" id="day-2-29" value="" min="0" step="100" placeholder="0"></td></tr>
+      </tbody></table>
+    </div>
+  </div>
+    </div>
+  </div>
+
+  <p class="section-label">Сводка</p>
+  <div class="kpi-grid" id="kpiGrid">
+    <div class="kpi"><div class="k-label">Общий план</div><div class="k-val">1&nbsp;562&nbsp;500</div><div class="k-sub">₴ на месяц</div></div>
+    <div class="kpi success"><div class="k-label">Факт (всего)</div><div class="k-val">133&nbsp;184</div><div class="k-sub">₴ внесено</div></div>
+    <div class="kpi"><div class="k-label">Выполнение</div><div class="k-val">8.5%</div><div class="k-sub">от общего плана</div></div>
+    <div class="kpi danger"><div class="k-label">Отклонение от плана</div><div class="k-val">−1&nbsp;429&nbsp;316</div><div class="k-sub">₴ факт vs план</div></div>
+    <div class="kpi danger"><div class="k-label">Прогноз на конец месяца</div><div class="k-val">799&nbsp;106</div><div class="k-sub">₴ (при темпе 5 дн. из 30)</div></div>
+  </div>
+
+  <p class="section-label">По менеджерам</p>
+  <div class="mgr-grid" id="mgrGrid">
+      <div class="mgr-card">
+        <div class="mgr-header">
+          <div class="mgr-name">Неля</div>
+          <div class="mgr-pct" style="color:#378ADD">10.1%</div>
+        </div>
+        <div class="mgr-row">Факт <span class="v">31&nbsp;510 ₴</span></div>
+        <div class="mgr-row">План <span class="v">312&nbsp;500 ₴</span></div>
+        <div class="mgr-row">Отклонение на сегодня <span class="v red">−20&nbsp;573 ₴</span></div>
+        <div class="mgr-row">Прогноз на конец месяца <span class="v red">189&nbsp;060 ₴</span></div>
+        <div class="bar-wrap">
+          <div class="bar-bg"><div class="bar-fill" style="width:10.1%;background:#378ADD"></div></div>
+        </div>
+      </div>
+    
+      <div class="mgr-card">
+        <div class="mgr-header">
+          <div class="mgr-name">Наталья</div>
+          <div class="mgr-pct" style="color:#1D9E75">3.4%</div>
+        </div>
+        <div class="mgr-row">Факт <span class="v">21&nbsp;479 ₴</span></div>
+        <div class="mgr-row">План <span class="v">625&nbsp;000 ₴</span></div>
+        <div class="mgr-row">Отклонение на сегодня <span class="v red">−82&nbsp;688 ₴</span></div>
+        <div class="mgr-row">Прогноз на конец месяца <span class="v red">128&nbsp;874 ₴</span></div>
+        <div class="bar-wrap">
+          <div class="bar-bg"><div class="bar-fill" style="width:3.4%;background:#1D9E75"></div></div>
+        </div>
+      </div>
+    
+      <div class="mgr-card">
+        <div class="mgr-header">
+          <div class="mgr-name">Наталья З</div>
+          <div class="mgr-pct" style="color:#BA7517">12.8%</div>
+        </div>
+        <div class="mgr-row">Факт <span class="v">80&nbsp;195 ₴</span></div>
+        <div class="mgr-row">План <span class="v">625&nbsp;000 ₴</span></div>
+        <div class="mgr-row">Отклонение на сегодня <span class="v red">−23&nbsp;971 ₴</span></div>
+        <div class="mgr-row">Прогноз на конец месяца <span class="v red">481&nbsp;172 ₴</span></div>
+        <div class="bar-wrap">
+          <div class="bar-bg"><div class="bar-fill" style="width:12.8%;background:#BA7517"></div></div>
+        </div>
+      </div>
+    </div>
+
+  <p class="section-label">Факт vs план</p>
+  <div class="chart-card">
+    <div class="legend" id="legend1"><span><span class="ldot" style="background:#378ADD"></span>Неля</span><span><span class="ldot" style="background:#1D9E75"></span>Наталья</span><span><span class="ldot" style="background:#BA7517"></span>Наталья З</span><span><span class="ldot" style="background:rgba(136,135,128,0.3);border:1px dashed #888"></span>План</span></div>
+    <div style="position:relative;width:100%;height:260px;">
+      <canvas id="barChart" style="box-sizing: border-box; display: block; height: 260px; width: 913px;" width="913" height="260"></canvas>
+    </div>
+  </div>
+
+  <p class="section-label">Накопленные оплаты по дням</p>
+  <div class="chart-card">
+    <div class="legend" id="legend2"><span><span class="ldot" style="background:#378ADD"></span>Неля</span><span><span class="ldot" style="background:#1D9E75"></span>Наталья</span><span><span class="ldot" style="background:#BA7517"></span>Наталья З</span></div>
+    <div style="position:relative;width:100%;height:260px;">
+      <canvas id="lineChart" style="box-sizing: border-box; display: block; height: 260px; width: 913px;" width="913" height="260"></canvas>
+    </div>
+  </div>
+
+  <p class="section-label">Выполнение плана (%)</p>
+  <div class="chart-card" style="display:flex;align-items:center;gap:2rem;flex-wrap:wrap;">
+    <div style="position:relative;width:200px;height:200px;flex-shrink:0;margin:0 auto;">
+      <canvas id="donutChart" style="box-sizing: border-box; display: block; height: 200px; width: 200px;" width="200" height="200"></canvas>
+    </div>
+    <div id="donutLegend" style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:10px;"><div style="display:flex;align-items:center;gap:10px;"><span style="width:12px;height:12px;border-radius:3px;background:#378ADD;flex-shrink:0"></span><div><div style="font-size:13px;font-weight:500">Неля</div><div style="font-size:11px;color:var(--text2)">31&nbsp;510 ₴ из 312&nbsp;500 ₴ — 10.1%</div></div></div><div style="display:flex;align-items:center;gap:10px;"><span style="width:12px;height:12px;border-radius:3px;background:#1D9E75;flex-shrink:0"></span><div><div style="font-size:13px;font-weight:500">Наталья</div><div style="font-size:11px;color:var(--text2)">21&nbsp;479 ₴ из 625&nbsp;000 ₴ — 3.4%</div></div></div><div style="display:flex;align-items:center;gap:10px;"><span style="width:12px;height:12px;border-radius:3px;background:#BA7517;flex-shrink:0"></span><div><div style="font-size:13px;font-weight:500">Наталья З</div><div style="font-size:11px;color:var(--text2)">80&nbsp;195 ₴ из 625&nbsp;000 ₴ — 12.8%</div></div></div></div>
+  </div>
+
+</div>
+
+<script>
+const MONTH_NAMES_RU_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const MONTH_NAMES_RU_CAP = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+
+function getDaysInMonth() {
+  return new Date(state.year, state.month, 0).getDate();
+}
+function getMonthName() { return MONTH_NAMES_RU_CAP[state.month - 1]; }
+function getMonthNameGen() { return MONTH_NAMES_RU_GEN[state.month - 1]; }
+
+Object.defineProperty(window, 'DAYS_IN_MAY', { get: getDaysInMonth });
+
+let state = {"month":6,"year":2026,"totalPlan":1562500,"managers":[{"name":"Неля","plan":312500,"color":"#378ADD","days":[0,4710,0,26800,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},{"name":"Наталья","plan":625000,"color":"#1D9E75","days":[0,879,2600,18000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},{"name":"Наталья З","plan":625000,"color":"#BA7517","days":[0,48336.3,8309,23550,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}]};
+
+let barChart, lineChart, donutChart;
+
+const fmt = v => Math.round(v).toLocaleString('ru-RU');
+const fmtK = v => v >= 1000000 ? (v/1000000).toFixed(1)+'M' : v >= 1000 ? (v/1000).toFixed(0)+'k' : Math.round(v);
+
+function cumulative(arr) {
+  let s = 0;
+  return arr.map(v => (s += v, s));
+}
+
+function getCurrentMayDay() {
+  const today = new Date();
+  if (today.getFullYear() === state.year && today.getMonth() + 1 === state.month) {
+    return Math.min(today.getDate(), getDaysInMonth());
+  }
+  return getDaysInMonth();
+}
+
+function renderKPI() {
+  const daysPassed = getCurrentMayDay();
+  const totalDays = getDaysInMonth();
+  const totalFact = state.managers.reduce((s, m) => s + m.days.reduce((a, b) => a + b, 0), 0);
+  const totalPlan = state.totalPlan;
+  const pctDone = (totalFact / totalPlan * 100).toFixed(1);
+  const dailyAvg = totalFact / daysPassed;
+  const prognosis = dailyAvg * totalDays;
+  const deviationFromPlan = totalFact - totalPlan;
+
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi"><div class="k-label">Общий план</div><div class="k-val">${fmt(totalPlan)}</div><div class="k-sub">₴ на месяц</div></div>
+    <div class="kpi ${totalFact > 0 ? 'success' : ''}"><div class="k-label">Факт (всего)</div><div class="k-val">${fmt(totalFact)}</div><div class="k-sub">₴ внесено</div></div>
+    <div class="kpi"><div class="k-label">Выполнение</div><div class="k-val">${pctDone}%</div><div class="k-sub">от общего плана</div></div>
+    <div class="kpi ${deviationFromPlan >= 0 ? 'success' : 'danger'}"><div class="k-label">Отклонение от плана</div><div class="k-val">${deviationFromPlan >= 0 ? '+' : '−'}${fmt(Math.abs(deviationFromPlan))}</div><div class="k-sub">₴ факт vs план</div></div>
+    <div class="kpi ${prognosis >= totalPlan ? 'success' : 'danger'}"><div class="k-label">Прогноз на конец месяца</div><div class="k-val">${fmt(prognosis)}</div><div class="k-sub">₴ (при темпе ${daysPassed} дн. из ${totalDays})</div></div>
+  `;
+}
+
+function renderMgrCards() {
+  const daysPassed = getCurrentMayDay();
+  const totalDays = getDaysInMonth();
+  
+  document.getElementById('mgrGrid').innerHTML = state.managers.map(m => {
+    const fact = m.days.reduce((a, b) => a + b, 0);
+    const plan = m.plan;
+    const p = (fact / plan * 100).toFixed(1);
+    
+    // Ожидание по плану на сегодня
+    const expectedToDate = (plan / totalDays) * daysPassed;
+    // Отклонение на сегодня (факт минус ожидание)
+    const deviationToday = fact - expectedToDate;
+    
+    let forecast = 0;
+    if (daysPassed > 0) {
+      const dailyRate = fact / daysPassed;
+      forecast = dailyRate * totalDays;
+    }
+    
+    return `
+      <div class="mgr-card">
+        <div class="mgr-header">
+          <div class="mgr-name">${m.name}</div>
+          <div class="mgr-pct" style="color:${m.color}">${p}%</div>
+        </div>
+        <div class="mgr-row">Факт <span class="v">${fmt(fact)} ₴</span></div>
+        <div class="mgr-row">План <span class="v">${fmt(plan)} ₴</span></div>
+        <div class="mgr-row">Отклонение на сегодня <span class="v ${deviationToday >= 0 ? 'green' : 'red'}">${deviationToday >= 0 ? '+' : '−'}${fmt(Math.abs(deviationToday))} ₴</span></div>
+        <div class="mgr-row">Прогноз на конец месяца <span class="v ${forecast >= plan ? 'green' : 'red'}">${fmt(forecast)} ₴</span></div>
+        <div class="bar-wrap">
+          <div class="bar-bg"><div class="bar-fill" style="width:${Math.min(p, 100)}%;background:${m.color}"></div></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderCharts() {
+  const labels = state.managers.map(m => m.name);
+  const facts = state.managers.map(m => m.days.reduce((a, b) => a + b, 0));
+  const plans = state.managers.map(m => m.plan);
+  const colors = state.managers.map(m => m.color);
+
+  document.getElementById('legend1').innerHTML =
+    state.managers.map(m => `<span><span class="ldot" style="background:${m.color}"></span>${m.name}</span>`).join('') +
+    `<span><span class="ldot" style="background:rgba(136,135,128,0.3);border:1px dashed #888"></span>План</span>`;
+
+  if (barChart) barChart.destroy();
+  const barCtx = document.getElementById('barChart').getContext('2d');
+  barChart = new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Факт', data: facts, backgroundColor: colors, borderRadius: 5, borderSkipped: false },
+        { label: 'План', data: plans, backgroundColor: 'rgba(136,135,128,0.18)', borderColor: '#888', borderWidth: 1, borderRadius: 5, borderSkipped: false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + fmt(ctx.parsed.y) + ' ₴' } } },
+      scales: { x: { grid: { display: false }, ticks: { color: '#888', font: { size: 12 } } }, y: { grid: { color: 'rgba(136,135,128,0.12)' }, ticks: { color: '#888', font: { size: 11 }, callback: fmtK } } }
+    }
+  });
+
+  const dayLabels = Array.from({ length: getDaysInMonth() }, (_, i) => `${i + 1}`);
+  document.getElementById('legend2').innerHTML = state.managers.map(m => `<span><span class="ldot" style="background:${m.color}"></span>${m.name}</span>`).join('');
+
+  if (lineChart) lineChart.destroy();
+  const lineCtx = document.getElementById('lineChart').getContext('2d');
+  lineChart = new Chart(lineCtx, {
+    type: 'line',
+    data: {
+      labels: dayLabels,
+      datasets: state.managers.map(m => ({
+        label: m.name,
+        data: cumulative(m.days),
+        borderColor: m.color,
+        backgroundColor: m.color + '22',
+        borderWidth: 2, fill: true, tension: 0.35,
+        pointRadius: m.days.map(v => v > 0 ? 3 : 0),
+        pointBackgroundColor: m.color
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + fmt(ctx.parsed.y) + ' ₴' } } },
+      scales: { x: { grid: { display: false }, ticks: { color: '#888', font: { size: 11 }, maxTicksLimit: 15 } }, y: { grid: { color: 'rgba(136,135,128,0.12)' }, ticks: { color: '#888', font: { size: 11 }, callback: fmtK } } }
+    }
+  });
+
+  const pcts = state.managers.map(m => parseFloat((m.days.reduce((a, b) => a + b, 0) / m.plan * 100).toFixed(1)));
+
+  if (donutChart) donutChart.destroy();
+  const donutCtx = document.getElementById('donutChart').getContext('2d');
+  donutChart = new Chart(donutCtx, {
+    type: 'doughnut',
+    data: { labels: state.managers.map(m => m.name), datasets: [{ data: pcts, backgroundColor: colors, borderWidth: 0, hoverOffset: 6 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + ctx.parsed.toFixed(1) + '% от плана' } } } }
+  });
+
+  document.getElementById('donutLegend').innerHTML = state.managers.map((m, i) => {
+    const fact = m.days.reduce((a, b) => a + b, 0);
+    return `<div style="display:flex;align-items:center;gap:10px;"><span style="width:12px;height:12px;border-radius:3px;background:${m.color};flex-shrink:0"></span><div><div style="font-size:13px;font-weight:500">${m.name}</div><div style="font-size:11px;color:var(--text2)">${fmt(fact)} ₴ из ${fmt(m.plan)} ₴ — ${pcts[i]}%</div></div></div>`;
+  }).join('');
+}
+
+function renderAll() {
+  renderKPI();
+  renderMgrCards();
+  renderCharts();
+  const now = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  document.getElementById('updated-label').textContent = `Данные за ${getMonthNameGen()} ${state.year} · обновлено ${now}`;
+  document.querySelector('.title-block h1').textContent = `Прогноз продаж — ${getMonthName()} ${state.year}`;
+  document.title = `Прогноз продаж — ${getMonthName()} ${state.year}`;
+}
+
+function buildEditor() {
+  const tabsEl = document.getElementById('mgrTabs');
+  const editorsEl = document.getElementById('mgrEditors');
+  document.getElementById('inp-total-plan').value = state.totalPlan;
+  document.getElementById('inp-month').value = state.month;
+  document.getElementById('inp-year').value = state.year;
+  tabsEl.innerHTML = state.managers.map((m, i) => `<button class="etab ${i === 0 ? 'active' : ''}" onclick="switchMgrTab(${i})">${m.name}</button>`).join('');
+  const daysCount = getDaysInMonth();
+  const mName = getMonthNameGen();
+  editorsEl.innerHTML = state.managers.map((m, i) => `
+    <div class="mgr-editor ${i === 0 ? 'active' : ''}" id="mgr-editor-${i}">
+      <div class="plan-row"><label>План ₴</label><input type="number" id="plan-${i}" value="${m.plan}" step="1000"></div>
+      <table class="day-table"><thead><tr><th>День ${mName}</th><th>Оплата ₴</th></tr></thead><tbody>
+        ${Array.from({ length: daysCount }, (_, d) => `<tr><td class="day-num">${d + 1} ${mName}</td><td><input type="number" id="day-${i}-${d}" value="${m.days[d] || ''}" min="0" step="100" placeholder="0"></td></tr>`).join('')}
+      </tbody></table>
+    </div>
+  `).join('');
+}
+
+function switchMgrTab(idx) {
+  document.querySelectorAll('.etab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  document.querySelectorAll('.mgr-editor').forEach((e, i) => e.classList.toggle('active', i === idx));
+}
+
+function toggleEditor() {
+  const panel = document.getElementById('editorPanel');
+  const isOpen = panel.classList.toggle('open');
+  if (isOpen) { buildEditor(); panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+}
+
+function applyAndClose() {
+  const newMonth = parseInt(document.getElementById('inp-month').value) || state.month;
+  const newYear = parseInt(document.getElementById('inp-year').value) || state.year;
+  state.month = Math.max(1, Math.min(12, newMonth));
+  state.year = newYear;
+  const newDays = getDaysInMonth();
+  state.totalPlan = parseFloat(document.getElementById('inp-total-plan').value) || state.totalPlan;
+  state.managers.forEach((m, i) => {
+    m.plan = parseFloat(document.getElementById(`plan-${i}`).value) || m.plan;
+    const newDayValues = Array.from({ length: newDays }, (_, d) => {
+      const el = document.getElementById(`day-${i}-${d}`);
+      if (!el) return 0;
+      const v = parseFloat(el.value);
+      return isNaN(v) ? 0 : v;
+    });
+    m.days = newDayValues;
+  });
+  document.getElementById('editorPanel').classList.remove('open');
+  renderAll();
+}
+
+function downloadHTML() {
+  const savedState = {
+    month: state.month,
+    year: state.year,
+    totalPlan: state.totalPlan,
+    managers: state.managers.map(m => ({
+      name: m.name,
+      plan: m.plan,
+      color: m.color,
+      days: [...m.days]
+    }))
+  };
+  let htmlContent = document.documentElement.outerHTML;
+  const stateRegex = /let state = \{[\s\S]*?\};/;
+  const newStateCode = `let state = ${JSON.stringify(savedState)};`;
+  htmlContent = htmlContent.replace(stateRegex, newStateCode);
+  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const mPad = String(state.month).padStart(2, '0');
+  a.download = `dashboard_${mPad}_${state.year}.html`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+renderAll();
+</script>
+
+</body></html>
